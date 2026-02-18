@@ -112,7 +112,61 @@ def geometric_hashing(
            Astrometry.net: Blind astrometric calibration of arbitrary
            astronomical images, The Astronomical Journal 139, pp1782-1800,  
            (2010). :DOI: `10.1088/0004-6256/139/5/1782`
-  
+    
+    Examples
+    --------
+
+    Create two sets of points for best transform identification.
+    This is 100 points in a 512x512 image.
+    
+    >>> rng = np.random.default_rng(42)
+    >>> npts = 100
+    >>> xy1 = np.stack((rng.uniform(0, 512, npts), rng.uniform(0, 512, npts)), axis = 1)
+    >>> xy2 = np.copy(xy1)
+    >>> xy1 += rng.normal(scale = 0.2, size = xy1.shape)
+    >>> xy2 += rng.normal(scale = 0.2, size = xy1.shape)
+
+    Add noise points.
+    
+    >>> nns = 30
+    >>> xy1n = np.concatenate((xy1, np.stack((rng.uniform(0, 512, nns), rng.uniform(0, 512, nns)), axis = 1)), axis = 0)
+    >>> xy2n = np.concatenate((xy2, np.stack((rng.uniform(0, 512, nns), rng.uniform(0, 512, nns)), axis = 1)), axis = 0)
+
+    Shuffle points and apply an affine tranform to the second set of points.
+    
+    >>> atrans = ski.transform.AffineTransform(scale = 1.5, rotation = 0.2*np.pi, translation = (100, 200))
+    >>> rng.shuffle(xy1n)
+    >>> rng.shuffle(xy2n)
+    >>> xy3n = atrans(xy2n)
+
+    Find the best transform between the two sets of points.
+
+    >>> score, trans = ski.measure.geometric_hashing(xy1n, xy3n)
+    Created 6259 quads from xy1
+    Created 4933 quads from xy2
+    
+    Comparing quads.
+    Match 0 score 6.10
+    Match 1 score 6.93
+    Match 4 score 7.09
+    Match 42 score 7.11
+    Match 49 score 7.11
+    Match 276 score 7.18
+    Match 361 score 7.19
+    Found 1111 matching quads
+
+    Compare the original transform to the found transform.
+    
+    >>> print(trans)
+    <AffineTransform(matrix=
+    [[  1.21420286,  -0.88214283,  99.97610601],
+     [  0.88080492,   1.21170114, 200.72283236],
+     [  0.        ,   0.        ,   1.        ]])>
+    >>> print(atrans)
+    <AffineTransform(matrix=
+    [[  1.21352549,  -0.88167788, 100.        ],
+     [  0.88167788,   1.21352549, 200.        ],
+     [  0.        ,   0.        ,   1.        ]])>
     """
 
     # Estimate some sensible defaults..
