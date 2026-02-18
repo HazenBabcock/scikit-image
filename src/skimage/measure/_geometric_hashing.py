@@ -7,6 +7,25 @@ from ..transform import AffineTransform
 def _fg_probability(kd1, kd2, transform, bg_p):
     """
     Returns an estimate of how likely the transform is correct.
+
+    Parameters
+    ----------
+    kd1 : scipy.spatial.KDTree object.
+        A KDTree with the first set of points.
+    kd2 : scipy.spatial.KDTree object.
+        A KDTree with the second set of points.
+    transform : An AffineTransform object.
+        A transform form that maps the first set of points
+        to the second set of points.
+    bg_p : float
+        The density of points in the first set. This is used
+        as an estimate of how likely the two sets of points
+        are to overlap by chance.
+
+    Returns
+    -------
+    foreground_probability : float
+        An estimate of how likely the transform is correct.
     """
     # Transform 'other' coordinates into the 'reference' frame.
     xy2 = transform.inverse(kd2.data)
@@ -41,9 +60,9 @@ def geometric_hashing(
     such as flourescent beads.
 
     Unlike astrometry.net we are just comparing all the quads looking
-    for the one that has the best score. This should be at least X
-    as, based on testing, you can sometimes get scores as high as Y
-    even if the match is not actually any good.
+    for the one that has the best score. This should be approximately
+    7 (for 200 pts on 512 x 512 image) as, based on testing, you can
+    sometimes get scores as high as 4-5 for random sets of points.
 
     This can be quite slow depending on the settings. The idea is to
     tune min_size and max_size such that a few hundred quads are
@@ -149,11 +168,28 @@ def geometric_hashing(
 
 def _make_quad(A, B, C, D):
     """
-    Returns a MicroQuad if points A,B,C,D form a proper 
+    Returns a _MicroQuad if points A,B,C,D form a proper 
     quad, otherwise returns None.
-
-    A,B define the coordinate system of the quad.
-    C,D are the internal points.
+    
+    A, B define the coordinate system of the quad.
+    C, D are the internal points.
+    
+    Parameters
+    ----------
+    A : (1, 2) ndarray
+        A point in 2D.
+    B : (1, 2) ndarray
+        A point in 2D.
+    C : (1, 2) ndarray
+        A point in 2D.
+    D : (1, 2) ndarray
+        A point in 2D.
+    
+    Returns
+    -------
+    quad : _MicroQuad or None
+        A _MicroQuad if the 4 points for a proper quad, otherwise
+        None.
     """
 
     # Calculate scale.
@@ -222,13 +258,23 @@ def _make_quads(kd, min_size, max_size, max_neighbors):
           proportional to the number of points times max_neighbors 
           to the 3rd power.
 
-    kd - A scipy.spatial.KDTree object.
-    min_size - A,B points must be at least this distance from each
-               other.
-    max_size - A,B points must be at most this distance from each 
-               other.
-    max_neighbors - Only consider at most this many neighbors when
-               constructing quads, default is 10.
+    Parameters
+    ----------
+    kd : scipy.spatial.KDTree object.
+    min_size : float
+        A, B points must be at least this distance from each
+        other.
+    max_size : float
+        A, B points must be at most this distance from each 
+        other.
+    max_neighbors : int
+        Only consider at most this many neighbors when
+        constructing quads.
+
+    Returns
+    -------
+    quads : A list of _MicroQuad
+        A list of _MicroQuad to use for matching.
     """
 
     quads = []
@@ -289,7 +335,29 @@ def _make_quads(kd, min_size, max_size, max_neighbors):
 
 def _make_tree_and_quads(xy, min_size, max_size, max_neighbors):
     """
-    Make a KD tree and a list of quads from x, y points.
+    Make a KD tree and a list of quads from xy (2, N) points.
+
+    Parameters
+    ----------
+    xy : (N, 2) ndarray.
+        A ndarray of points to use to make a scipy.spatial.KDTree
+        and a list of quads.
+    min_size : float
+        A, B points must be at least this distance from each
+        other.
+    max_size : float
+        A, B points must be at most this distance from each 
+        other.
+    max_neighbors : int
+        Only consider at most this many neighbors when
+        constructing quads.
+
+    Returns
+    -------
+    kd : scipy.spatial.KDTree object.
+        A KDTree containing the xy points.    
+    quads : List of _MicroQuad
+        A list of _MicroQuad to use for matching.    
     """
     kd = sp.spatial.KDTree(xy)
     m_quads = _make_quads(kd,
@@ -305,6 +373,26 @@ class _MicroQuad(object):
     between the two sets of points.
     """
     def __init__(self, A, B, C, D, xc, yc, xd, yd):
+        """
+        Parameters
+        ----------
+        A : (1, 2) ndarray
+            A point in 2D.
+        B : (1, 2) ndarray
+            A point in 2D.
+        C : (1, 2) ndarray
+            A point in 2D.
+        D : (1, 2) ndarray
+            A point in 2D.
+        xc : float
+            C point x position in A/B space.
+        yc : float
+            C point y position in A/B space.
+        xd : float
+            D point x position in A/B space.
+        yd : float
+            D point y position in A/B space.
+        """
         self.A = A
         self.B = B
         self.C = C
@@ -320,6 +408,16 @@ class _MicroQuad(object):
     def get_transform(self, other):
         """
         Returns the transform to go from self space to other space.
+
+        Parameters
+        ----------
+        other : _MicroQuad
+            A _MicroQuad object.
+
+        Returns
+        -------
+        trans : AffineTransform.
+            An AffineTransform from self points to other points.
         """
         assert isinstance(other, _MicroQuad)
 
@@ -329,10 +427,21 @@ class _MicroQuad(object):
         
     def is_match(self, other, tolerance = 1.0e-2):
         """
-        Returns True is two quads match each other.
-        """
-        assert isinstance(other, _MicroQuad)
+        Returns True if two quads match each other.
 
+        Parameters
+        ----------
+        other : _MicroQuad
+            A _MicroQuad object.
+        tolerance : float, optional
+            The tolerance for matching the two quads to each other,
+            default is 0.01.
+
+        Returns
+        -------
+        match : bool
+            True if the two quads match each other, otherwise False.
+        """
         #
         # There are only two ways to match:
         #
