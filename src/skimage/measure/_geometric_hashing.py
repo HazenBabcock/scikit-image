@@ -116,8 +116,8 @@ def geometric_hashing(
     """
 
     # Estimate some sensible defaults..
-    max_neighbors_1 = max_neighbors_1 if not max_neighbors_1 is None else 10
-    max_neighbors_2 = max_neighbors_2 if not max_neighbors_2 is None else 10
+    max_neighbors_1 = max_neighbors_1 if not max_neighbors_1 is None else 20
+    max_neighbors_2 = max_neighbors_2 if not max_neighbors_2 is None else 20
 
     if min_size_1 is None:
         min_size_1 = 0.05 * np.max(np.max(xy1, axis = 0) - np.min(xy1, axis = 0))
@@ -307,8 +307,8 @@ def _make_quads(kd, min_size, max_size, max_neighbors):
         dist = dist[mask]
         index = index[mask]
 
-        # If we don't have at least 4 points proceed to the next A.
-        if (index.size < 4):
+        # If we don't have at least 3 points proceed to the next A.
+        if (index.size < 3):
             continue
         
         #
