@@ -38,6 +38,7 @@ __all__ = [
     'manders_overlap_coeff',
     'intersection_coeff',
     'centroid',
+    'geometric_hashing'
 ]
 
 from ._find_contours import find_contours
@@ -74,3 +75,6 @@ from ._colocalization import (
     manders_overlap_coeff,
     intersection_coeff,
 )
+
+from ._geometric_hashing import geometric_hashing
+

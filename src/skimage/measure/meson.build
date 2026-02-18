@@ -23,6 +23,7 @@ python_sources = [
   '_blur_effect.py',
   '_colocalization.py',
   '_find_contours.py',
+  '_geometric_hashing.py',
   '_label.py',
   '_marching_cubes_lewiner.py',
   '_marching_cubes_lewiner_luts.py',
