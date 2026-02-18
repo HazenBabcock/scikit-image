@@ -144,25 +144,30 @@ def geometric_hashing(
     Find the best transform between the two sets of points.
 
     >>> score, trans = ski.measure.geometric_hashing(xy1n, xy3n)
-    Created 6259 quads from xy1
-    Created 4933 quads from xy2
-    
+    Created 5837 quads from xy1
+    Created 4804 quads from xy2
+    <BLANKLINE>
     Comparing quads.
-    Match 0 score 6.10
-    Match 1 score 6.93
-    Match 4 score 7.09
-    Match 42 score 7.11
-    Match 49 score 7.11
-    Match 276 score 7.18
-    Match 361 score 7.19
-    Found 1111 matching quads
-
+    Match 0 score 5.41
+    Match 1 score 6.30
+    Match 3 score 6.31
+    Match 4 score 6.31
+    Match 18 score 6.46
+    Match 19 score 6.64
+    Match 53 score 6.85
+    Match 69 score 7.13
+    Match 119 score 7.14
+    Match 219 score 7.20
+    Match 660 score 7.20
+    Match 665 score 7.22
+    Found 1260 matching quads
+    
     Compare the original transform to the found transform.
     
     >>> print(trans)
     <AffineTransform(matrix=
-    [[  1.21420286,  -0.88214283,  99.97610601],
-     [  0.88080492,   1.21170114, 200.72283236],
+    [[  1.21379295,  -0.88087708,  99.70028945],
+     [  0.88037462,   1.21386457, 200.34330023],
      [  0.        ,   0.        ,   1.        ]])>
     >>> print(atrans)
     <AffineTransform(matrix=
