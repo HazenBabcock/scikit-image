@@ -115,7 +115,9 @@ def geometric_hashing(
     
     Examples
     --------
-
+    >>> import numpy as np
+    >>> import skimage as ski
+    
     Create two sets of points for best transform identification.
     This is 100 points in a 512x512 image.
     
